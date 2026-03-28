@@ -7,10 +7,16 @@
 __pycache__/
 *.pyc
 venv/
+.venv/
 env/
+
+# Database
+*.db
+*.sqlite
 
 # Node
 node_modules/
+.next/
 
 # OS
 .DS_Store

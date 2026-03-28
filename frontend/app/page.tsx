@@ -218,27 +218,33 @@ export default function CareSightDashboard() {
                 const isViolation = event.type === 'wrong_med_attempt';
                 const isCorrected = event.corrected;
                 
-                let statusColor = 'red';
-                let statusText = 'Violation';
-                let statusIcon = 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
-                
-                if (isCorrected) {
-                  statusColor = 'green';
-                  statusText = 'Corrected';
-                  statusIcon = 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
-                }
+                const statusStyles = isCorrected
+                  ? {
+                      border: 'border-green-500',
+                      bg: 'bg-green-100',
+                      text: 'text-green-600',
+                      label: 'Corrected',
+                      icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                    }
+                  : {
+                      border: 'border-red-500',
+                      bg: 'bg-red-100',
+                      text: 'text-red-600',
+                      label: 'Violation',
+                      icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+                    };
 
                 return (
-                  <div key={event.event_id} className={`border-l-4 border-${statusColor}-500 bg-gray-50 p-4 rounded-r-lg`}>
+                  <div key={event.event_id} className={`border-l-4 ${statusStyles.border} bg-gray-50 p-4 rounded-r-lg`}>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
-                          <div className={`bg-${statusColor}-100 p-2 rounded-full`}>
-                            <svg className={`w-5 h-5 text-${statusColor}-600`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={statusIcon}></path>
+                          <div className={`${statusStyles.bg} p-2 rounded-full`}>
+                            <svg className={`w-5 h-5 ${statusStyles.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={statusStyles.icon}></path>
                             </svg>
                           </div>
-                          <span className={`font-semibold text-${statusColor}-600`}>{statusText}</span>
+                          <span className={`font-semibold ${statusStyles.text}`}>{statusStyles.label}</span>
                           <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">{event.severity}</span>
                         </div>
                         <div className="ml-11 space-y-1">
