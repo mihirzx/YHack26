@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSight Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        @keyframes pulse-red {
+            0%, 100% { background-color: rgb(239 68 68); }
+            50% { background-color: rgb(220 38 38); }
+        }
+        .alert-pulse {
+            animation: pulse-red 2s infinite;
+        }
+        .event-card {
+            transition: all 0.3s ease;
+        }
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-blue-600 text-white shadow-lg">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        <h1 class="text-2xl font-bold">CareSight Dashboard</h1>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm">Live Monitoring</span>
+                        <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-6 py-8">
+            <!-- Settings Section -->
+            <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Medication Settings</h2>
+                <div class="flex items-center space-x-4">
+                    <label class="text-gray-700">Expected Medication Color:</label>
+                    <select id="medicationColor" class="border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="red">Red</option>
+                        <option value="blue">Blue</option>
+                        <option value="green">Green</option>
+                        <option value="yellow">Yellow</option>
+                        <option value="orange">Orange</option>
+                        <option value="purple">Purple</option>
+                    </select>
+                    <button id="saveSettings" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                        Save Settings
+                    </button>
+                </div>
+                <div id="settingsMessage" class="mt-2 text-sm hidden"></div>
+            </section>
+
+            <!-- Status Cards -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Events</p>
+                            <p id="totalEvents" class="text-2xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Violations</p>
+                            <p id="violationCount" class="text-2xl font-bold text-red-600">0</p>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Corrections</p>
+                            <p id="correctionCount" class="text-2xl font-bold text-green-600">0</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Event Timeline -->
+            <section class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800">Event Timeline</h2>
+                    <button id="refreshEvents" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+                
+                <div id="eventsContainer" class="space-y-4 max-h-96 overflow-y-auto">
+                    <!-- Events will be loaded here -->
+                    <div class="text-center text-gray-500 py-8">
+                        <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p>No events recorded yet</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        class CareSightDashboard {
+            constructor() {
+                this.events = [];
+                this.settings = { expected_color: 'red' };
+                this.init();
+            }
+
+            init() {
+                this.loadSettings();
+                this.loadEvents();
+                this.setupEventListeners();
+                this.startAutoRefresh();
+            }
+
+            setupEventListeners() {
+                document.getElementById('saveSettings').addEventListener('click', () => this.saveSettings());
+                document.getElementById('refreshEvents').addEventListener('click', () => this.loadEvents());
+            }
+
+            async loadSettings() {
+                try {
+                    const response = await axios.get('/api/settings/medication');
+                    this.settings = response.data;
+                    document.getElementById('medicationColor').value = this.settings.expected_color;
+                } catch (error) {
+                    console.error('Failed to load settings:', error);
+                }
+            }
+
+            async saveSettings() {
+                const color = document.getElementById('medicationColor').value;
+                try {
+                    const response = await axios.post('/api/settings/medication', {
+                        expected_color: color
+                    });
+                    
+                    if (response.data.success) {
+                        this.showMessage('Settings saved successfully!', 'success');
+                        this.settings.expected_color = color;
+                    }
+                } catch (error) {
+                    this.showMessage('Failed to save settings', 'error');
+                    console.error('Failed to save settings:', error);
+                }
+            }
+
+            async loadEvents() {
+                try {
+                    const response = await axios.get('/api/events');
+                    this.events = response.data;
+                    this.renderEvents();
+                    this.updateStats();
+                } catch (error) {
+                    console.error('Failed to load events:', error);
+                }
+            }
+
+            renderEvents() {
+                const container = document.getElementById('eventsContainer');
+                
+                if (this.events.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p>No events recorded yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = this.events.map(event => this.createEventCard(event)).join('');
+            }
+
+            createEventCard(event) {
+                const timestamp = new Date(event.timestamp).toLocaleString();
+                const isViolation = event.type === 'wrong_med_attempt';
+                const isCorrected = event.corrected;
+                
+                let statusColor = 'red';
+                let statusText = 'Violation';
+                let statusIcon = 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+                
+                if (isCorrected) {
+                    statusColor = 'green';
+                    statusText = 'Corrected';
+                    statusIcon = 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+                }
+
+                return `
+                    <div class="event-card border-l-4 border-${statusColor}-500 bg-gray-50 p-4 rounded-r-lg">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <div class="bg-${statusColor}-100 p-2 rounded-full">
+                                        <svg class="w-5 h-5 text-${statusColor}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${statusIcon}"></path>
+                                        </svg>
+                                    </div>
+                                    <span class="font-semibold text-${statusColor}-600">${statusText}</span>
+                                    <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">${event.severity}</span>
+                                </div>
+                                <div class="ml-11 space-y-1">
+                                    <p class="text-sm text-gray-700">
+                                        <span class="font-medium">Expected:</span> 
+                                        <span class="inline-block w-4 h-4 rounded-full bg-${event.expected === 'red' ? 'red' : event.expected === 'blue' ? 'blue' : event.expected === 'green' ? 'green' : event.expected === 'yellow' ? 'yellow' : event.expected === 'orange' ? 'orange' : 'purple'} ml-1 align-middle"></span>
+                                        ${event.expected}
+                                    </p>
+                                    <p class="text-sm text-gray-700">
+                                        <span class="font-medium">Observed:</span> 
+                                        <span class="inline-block w-4 h-4 rounded-full bg-${event.observed === 'red' ? 'red' : event.observed === 'blue' ? 'blue' : event.observed === 'green' ? 'green' : event.observed === 'yellow' ? 'yellow' : event.observed === 'orange' ? 'orange' : 'purple'} ml-1 align-middle"></span>
+                                        ${event.observed}
+                                    </p>
+                                    <p class="text-xs text-gray-500 mt-2">${timestamp}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            updateStats() {
+                const totalEvents = this.events.length;
+                const violations = this.events.filter(e => e.type === 'wrong_med_attempt' && !e.corrected).length;
+                const corrections = this.events.filter(e => e.corrected).length;
+
+                document.getElementById('totalEvents').textContent = totalEvents;
+                document.getElementById('violationCount').textContent = violations;
+                document.getElementById('correctionCount').textContent = corrections;
+            }
+
+            showMessage(message, type) {
+                const messageDiv = document.getElementById('settingsMessage');
+                messageDiv.textContent = message;
+                messageDiv.className = `mt-2 text-sm ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+                messageDiv.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    messageDiv.classList.add('hidden');
+                }, 3000);
+            }
+
+            startAutoRefresh() {
+                setInterval(() => {
+                    this.loadEvents();
+                }, 5000); // Refresh every 5 seconds
+            }
+        }
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new CareSightDashboard();
+        });
+    </script>
+</body>
+</html>
