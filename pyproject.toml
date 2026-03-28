@@ -11,7 +11,7 @@ dependencies = [
     "python-multipart",
     "httpx",
     "motor",
-    "google-generativeai",
+    "google-genai",
     "elevenlabs",
     "websockets",
     "twilio",

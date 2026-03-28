@@ -1,13 +1,22 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
-from datetime import datetime
-import sqlite3
-import uuid
-import json
+from typing import Optional
+from contextlib import asynccontextmanager
+import asyncio
+import backend.database as db
+import backend.event_handler as handler
 
-app = FastAPI(title="CareSight Backend", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db.connect()
+    asyncio.get_event_loop().create_task(handler.consumer())
+    yield
+    db.disconnect()
+
+
+app = FastAPI(title="CareSight Backend", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,133 +46,67 @@ class MedicationResponse(BaseModel):
     success: bool
     expected_color: str
 
-def init_db():
-    conn = sqlite3.connect('caresight.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS events (
-            event_id TEXT PRIMARY KEY,
-            timestamp TEXT NOT NULL,
-            type TEXT NOT NULL,
-            expected TEXT,
-            observed TEXT,
-            corrected BOOLEAN DEFAULT FALSE,
-            severity TEXT DEFAULT 'medium'
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS settings (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL
-        )
-    ''')
-    
-    cursor.execute('''
-        INSERT OR IGNORE INTO settings (key, value) VALUES ('expected_medication', 'red')
-    ''')
-    
-    conn.commit()
-    conn.close()
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
-init_db()
-
-@app.post("/events", response_model=EventResponse)
-async def create_event(event: Event):
-    try:
-        event_id = event.event_id or str(uuid.uuid4())
-        timestamp = event.timestamp or datetime.now().isoformat()
-        
-        conn = sqlite3.connect('caresight.db')
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO events (event_id, timestamp, type, expected, observed, corrected, severity)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (event_id, timestamp, event.type, event.expected, event.observed, event.corrected, event.severity))
-        
-        conn.commit()
-        conn.close()
-        
-        return EventResponse(success=True, event_id=event_id)
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/events", response_model=List[Event])
-async def get_events():
-    try:
-        conn = sqlite3.connect('caresight.db')
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT event_id, timestamp, type, expected, observed, corrected, severity
-            FROM events
-            ORDER BY timestamp DESC
-        ''')
-        
-        events = []
-        for row in cursor.fetchall():
-            events.append(Event(
-                event_id=row[0],
-                timestamp=row[1],
-                type=row[2],
-                expected=row[3],
-                observed=row[4],
-                corrected=bool(row[5]),
-                severity=row[6]
-            ))
-        
-        conn.close()
-        return events
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/settings/medication", response_model=MedicationResponse)
-async def set_medication(setting: MedicationSetting):
-    try:
-        conn = sqlite3.connect('caresight.db')
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT OR REPLACE INTO settings (key, value)
-            VALUES ('expected_medication', ?)
-        ''', (setting.expected_color,))
-        
-        conn.commit()
-        conn.close()
-        
-        return MedicationResponse(success=True, expected_color=setting.expected_color)
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/settings/medication", response_model=MedicationSetting)
-async def get_medication():
-    try:
-        conn = sqlite3.connect('caresight.db')
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT value FROM settings WHERE key = 'expected_medication'
-        ''')
-        
-        result = cursor.fetchone()
-        conn.close()
-        
-        if result:
-            return MedicationSetting(expected_color=result[0])
-        else:
-            return MedicationSetting(expected_color="red")
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
 async def root():
     return {"message": "CareSight Backend API is running"}
+
+
+@app.post("/events", status_code=202, response_model=EventResponse)
+async def create_event(event: Event):
+    try:
+        doc = event.model_dump()
+        event_id = await db.create_event(doc)
+        doc["event_id"] = event_id
+        await handler.enqueue(doc)
+        return EventResponse(success=True, event_id=event_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/events")
+async def get_events(limit: int = 50):
+    try:
+        return await db.list_events(limit)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/events/{event_id}")
+async def get_event(event_id: str):
+    doc = await db.get_event(event_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return doc
+
+
+@app.patch("/events/{event_id}/corrected")
+async def mark_corrected(event_id: str):
+    await db.mark_corrected(event_id)
+    return {"success": True}
+
+
+@app.get("/settings/medication", response_model=MedicationSetting)
+async def get_medication():
+    try:
+        config = await db.get_config()
+        return MedicationSetting(expected_color=config["expected_color"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/settings/medication", response_model=MedicationResponse)
+async def set_medication(setting: MedicationSetting):
+    try:
+        await db.set_config(setting.expected_color)
+        return MedicationResponse(success=True, expected_color=setting.expected_color)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import uvicorn

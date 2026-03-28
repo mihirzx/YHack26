@@ -9,7 +9,7 @@ httpx
 motor                          # async MongoDB driver
 
 # AI / Voice
-google-generativeai
+google-genai
 elevenlabs
 websockets                     # ElevenLabs WebSocket streaming
 
