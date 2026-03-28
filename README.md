@@ -1,3 +1,4 @@
+
 # CareSight — AI-Powered Virtual Caregiver System
 
 > A real-time AI caregiver system that monitors user behavior through vision, detects unsafe or incorrect actions (e.g., medication errors), and intervenes instantly with voice guidance — while providing caregivers with live insights and alerts.
