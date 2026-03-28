@@ -192,7 +192,15 @@ System logs correction
 
 ## Getting Started
 
-### 1. Install dependencies
+### 1. Set up environment variables
+```
+cp .env.example .env
+```
+Then open `.env` and fill in your actual API keys.
+
+> **IMPORTANT:** Never commit `.env` — it contains secrets. It's already in `.gitignore`.
+
+### 2. Install dependencies
 ```
 pip install -r requirements.txt
 ```
