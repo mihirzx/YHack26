@@ -1,13 +1,22 @@
 [project]
-name = "yhack26"
+name = "caresight"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI-powered virtual caregiver system for dementia and Alzheimer's patients"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "fastapi==0.115.0",
-    "pydantic==2.9.0",
-    "python-dotenv==1.0.1",
-    "uvicorn==0.30.0",
-    "viam-sdk[mlmodel]>=0.72.0",
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "python-multipart",
+    "httpx",
+    "motor",
+    "google-generativeai",
+    "elevenlabs",
+    "websockets",
+    "twilio",
+    "pyaudio",
+    "viam-sdk[mlmodel]",
+    "python-dotenv",
+    "pydantic-settings",
 ]

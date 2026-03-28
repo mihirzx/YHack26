@@ -21,8 +21,8 @@ class Event(BaseModel):
     event_id: Optional[str] = None
     timestamp: Optional[str] = None
     type: str
-    expected: str
-    observed: str
+    expected: Optional[str] = None
+    observed: Optional[str] = None
     corrected: bool = False
     severity: str = "medium"
 
@@ -46,8 +46,8 @@ def init_db():
             event_id TEXT PRIMARY KEY,
             timestamp TEXT NOT NULL,
             type TEXT NOT NULL,
-            expected TEXT NOT NULL,
-            observed TEXT NOT NULL,
+            expected TEXT,
+            observed TEXT,
             corrected BOOLEAN DEFAULT FALSE,
             severity TEXT DEFAULT 'medium'
         )

@@ -1,1 +1,27 @@
-python-dotenv==1.0.1
+# Web framework
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+httpx
+
+# Database
+motor                          # async MongoDB driver
+
+# AI / Voice
+google-generativeai
+elevenlabs
+websockets                     # ElevenLabs WebSocket streaming
+
+# Alerts
+twilio
+
+# Audio playback (Pi speaker)
+pyaudio
+
+# Hardware
+viam-sdk[mlmodel]
+
+# Utilities
+python-dotenv
+pydantic-settings
