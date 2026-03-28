@@ -146,7 +146,7 @@ export default function CareSightDashboard() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm">Total Events</p>
+                <p className="text-gray-500 text-sm">Total Events.</p>
                 <p className="text-2xl font-bold text-gray-800">{totalEvents}</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
