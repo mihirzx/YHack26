@@ -56,8 +56,8 @@ def create_event(
         "event_id": _next_event_id(),
         "timestamp": time.time(),
         "type": event_type,
-        "expected_color": expected_color,
-        "observed_color": observed_color,
+        "expected": expected_color,
+        "observed": observed_color,
         "corrected": event_type == "corrected",
         "severity": severity,
     }
