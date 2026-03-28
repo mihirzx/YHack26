@@ -1,6 +1,14 @@
 import asyncio
 import time
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+VIAM_API_KEY = os.getenv("VIAM_API_KEY")
+VIAM_API_KEY_ID = os.getenv("VIAM_API_KEY_ID")
+
 from viam.robot.client import RobotClient
 from viam.components.camera import Camera
 from viam.services.vision import VisionClient
@@ -9,10 +17,10 @@ from viam.services.generic import Generic as GenericService
 
 async def connect():
     opts = RobotClient.Options.with_api_key(
-         
-        api_key='crgqjkiqtw3w425soptnps4728uxowa7',
-        
-        api_key_id='58b9c053-5a87-4f89-92e2-08d8212b9aa2'
+
+        api_key=VIAM_API_KEY,
+
+        api_key_id=VIAM_API_KEY_ID
     )
     return await RobotClient.at_address('caresight-main.r756pbub7x.viam.cloud', opts)
 
