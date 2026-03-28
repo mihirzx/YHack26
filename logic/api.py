@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-from caresight.logic.rules import RulesEngine
+from logic.rules import RulesEngine
 
 load_dotenv()
 
