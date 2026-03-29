@@ -43,10 +43,8 @@ def write_detection(color, detection=None):
 
 async def connect():
     opts = RobotClient.Options.with_api_key(
-
         api_key=VIAM_API_KEY,
-
-        api_key_id=VIAM_API_KEY_ID:
+        api_key_id=VIAM_API_KEY_ID
     )
     return await RobotClient.at_address(VIAM_ADDRESS, opts)
 

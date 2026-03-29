@@ -22,11 +22,7 @@ class ArduinoAccelerometer(MovementSensor, ResourceBase):
         self.latest_gyro = Vector3(x=0.0, y=0.0, z=0.0)
 
     @classmethod
-    def new(
-        cls,
-        config,
-        dependencies,
-    ) -> "ArduinoAccelerometer":
+    def new(cls, config, dependencies):
         sensor = cls(config.name)
 
         attributes = config.attributes if hasattr(config, "attributes") else {}
@@ -38,10 +34,10 @@ class ArduinoAccelerometer(MovementSensor, ResourceBase):
         return sensor
 
     @classmethod
-    def validate_config(cls, config) -> list[str]:
+    def validate_config(cls, config):
         return []
 
-    def _read_serial_line(self) -> None:
+    def _read_serial_line(self):
         if self.ser is None:
             return
 
@@ -54,35 +50,37 @@ class ArduinoAccelerometer(MovementSensor, ResourceBase):
             self.latest_accel = Vector3(x=ax, y=ay, z=az)
             self.latest_gyro = Vector3(x=gx, y=gy, z=gz)
         except ValueError:
-            # Skip malformed lines such as startup text
-            return
+            pass
 
-    async def get_linear_acceleration(
-        self,
-        extra: Optional[Mapping[str, Any]] = None,
-        **kwargs,
-    ) -> Vector3:
+    async def get_linear_acceleration(self, extra=None, **kwargs) -> Vector3:
         self._read_serial_line()
         return self.latest_accel
 
-    async def get_angular_velocity(
-        self,
-        extra: Optional[Mapping[str, Any]] = None,
-        **kwargs,
-    ) -> Vector3:
+    async def get_angular_velocity(self, extra=None, **kwargs) -> Vector3:
         self._read_serial_line()
         return self.latest_gyro
 
-    async def get_properties(
-        self,
-        extra: Optional[Mapping[str, Any]] = None,
-        **kwargs,
-    ) -> MovementSensor.Properties:
+    async def get_orientation(self, extra=None, **kwargs):
+        return None
+
+    async def get_position(self, extra=None, **kwargs):
+        return None
+
+    async def get_linear_velocity(self, extra=None, **kwargs):
+        return None
+
+    async def get_compass_heading(self, extra=None, **kwargs):
+        return None
+
+    async def get_accuracy(self, extra=None, **kwargs):
+        return None
+
+    async def get_properties(self, extra=None, **kwargs):
         return MovementSensor.Properties(
             linear_acceleration_supported=True,
             angular_velocity_supported=True,
         )
 
-    async def close(self) -> None:
+    async def close(self):
         if self.ser is not None and self.ser.is_open:
             self.ser.close()
