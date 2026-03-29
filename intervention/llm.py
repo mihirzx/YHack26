@@ -15,11 +15,37 @@ SYSTEM_PROMPT = (
 )
 
 
+SEVERITY_INSTRUCTIONS = {
+    "low": (
+        "Use a warm, gentle tone. This is a soft reminder. Keep it calm and friendly."
+    ),
+    "medium": (
+        "Use a clear, attentive tone. The patient needs to act but is not in danger. Be direct but kind."
+    ),
+    "high": (
+        "Use a firm, urgent tone. The patient needs to act now. Be short, clear, and authoritative."
+    ),
+    "critical": (
+        "Use a calm but serious tone. The patient may be in danger. Reassure them help is coming. "
+        "Say something like 'stay calm, I am calling your family right now.'"
+    ),
+}
+
+
 async def generate_instruction(event: dict, context: str = "") -> str:
     t0 = time.time()
 
+    severity = event.get("severity", "medium")
+    severity_note = SEVERITY_INSTRUCTIONS.get(severity, SEVERITY_INSTRUCTIONS["medium"])
     event_description = _describe_event(event)
-    prompt = f"{SYSTEM_PROMPT}\n\n{context}\n\nSituation: {event_description}\n\nSpoken instruction:"
+
+    prompt = (
+        f"{SYSTEM_PROMPT}\n\n"
+        f"Severity: {severity.upper()} — {severity_note}\n\n"
+        f"{context}\n\n"
+        f"Situation: {event_description}\n\n"
+        f"Spoken instruction:"
+    )
 
     response = await client.aio.models.generate_content(
         model="gemini-2.5-flash-lite",
@@ -32,16 +58,20 @@ async def generate_instruction(event: dict, context: str = "") -> str:
     text = response.text.strip()
 
     elapsed = time.time() - t0
-    print(f"[Gemini] ({elapsed:.2f}s) → \"{text}\"")
+    print(f"[Gemini] ({elapsed:.2f}s) [{severity}] → \"{text}\"")
     return text
 
 
 def _describe_event(event: dict) -> str:
     t = event.get("type", "unknown")
-    if t == "wrong_med_attempt":
-        return f"Patient tried to take the {event.get('observed')} pill but should take the {event.get('expected')} pill."
+    if t in ("wrong_med_attempt", "medication"):
+        obs = event.get("observed")
+        exp = event.get("expected")
+        if obs and exp:
+            return f"Patient tried to take the {obs} pill but should take the {exp} pill."
+        return "Patient may be taking the wrong medication."
     if t == "fall_detected":
-        return "Patient has fallen."
+        return "Patient has fallen and may need help getting up."
     if t == "wandering_detected":
         return f"Patient has left the {event.get('last_zone', 'safe area')} and is near {event.get('current_zone', 'an unsafe area')}."
     if t == "unsafe_activity":

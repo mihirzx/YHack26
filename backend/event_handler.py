@@ -1,9 +1,8 @@
 import asyncio
 import os
 from collections import deque
-from intervention.llm import generate_instruction
+from intervention.llm import generate_instruction, _describe_event
 from intervention.speech import speak
-from integrations.twilio_sms import send_sms
 from integrations.elevenlabs_call import trigger_call
 import backend.database as db
 
@@ -21,6 +20,16 @@ def _build_context() -> str:
     return f"Recent events today:\n{lines}"
 
 
+def _build_recent_summary() -> str:
+    if not recent_events:
+        return "No recent events."
+    lines = [
+        f"{e.get('type', 'unknown')} at {e.get('timestamp', '?')}"
+        for e in list(recent_events)[-5:]
+    ]
+    return "; ".join(lines)
+
+
 async def consumer():
     print("[event_handler] consumer started")
     while True:
@@ -33,13 +42,12 @@ async def consumer():
 
             severity = event.get("severity", "low")
             patient_name = os.getenv("PATIENT_NAME", "the patient")
-            if severity in ("high", "critical"):
-                asyncio.create_task(send_sms(f"CareSight Alert: {text}"))
             if severity == "critical":
                 asyncio.create_task(trigger_call(
                     event_type=event.get("type", "alert"),
-                    event_description=text,
+                    event_situation=_describe_event(event),
                     patient_name=patient_name,
+                    recent_events_summary=_build_recent_summary(),
                 ))
         except Exception as e:
             print(f"[event_handler] error processing event: {e}")

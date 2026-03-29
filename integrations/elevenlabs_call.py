@@ -10,7 +10,12 @@ AGENT_PHONE_ID = os.getenv("ELEVENLABS_AGENT_PHONE_ID")
 FAMILY_PHONE = os.getenv("FAMILY_PHONE")
 
 
-async def trigger_call(event_type: str, event_description: str, patient_name: str = "the patient"):
+async def trigger_call(
+    event_type: str,
+    event_situation: str,
+    patient_name: str = "the patient",
+    recent_events_summary: str = "No recent events.",
+):
     """Trigger an ElevenLabs Conversational AI outbound call to the family member."""
     payload = {
         "agent_id": AGENT_ID,
@@ -20,7 +25,8 @@ async def trigger_call(event_type: str, event_description: str, patient_name: st
             "dynamic_variables": {
                 "patient_name": patient_name,
                 "event_type": event_type,
-                "event_description": event_description,
+                "event_situation": event_situation,
+                "recent_events_summary": recent_events_summary,
             }
         },
     }

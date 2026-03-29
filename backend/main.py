@@ -21,7 +21,8 @@ async def broadcast_event(event: dict):
             await ws.send_text(data)
         except Exception:
             dead.add(ws)
-    connected_clients -= dead
+    for ws in dead:
+        connected_clients.discard(ws)
 
 
 @asynccontextmanager
