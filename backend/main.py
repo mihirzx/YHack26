@@ -1,11 +1,27 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from contextlib import asynccontextmanager
 import asyncio
+import json
 import backend.database as db
 import backend.event_handler as handler
+
+# ── WebSocket clients ────────────────────────────────────────────
+connected_clients: set[WebSocket] = set()
+
+
+async def broadcast_event(event: dict):
+    """Push event to all connected dashboard WebSocket clients."""
+    dead: set[WebSocket] = set()
+    data = json.dumps(event, default=str)
+    for ws in connected_clients:
+        try:
+            await ws.send_text(data)
+        except Exception:
+            dead.add(ws)
+    connected_clients -= dead
 
 
 @asynccontextmanager
@@ -46,6 +62,17 @@ class MedicationResponse(BaseModel):
     success: bool
     expected_color: str
 
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    connected_clients.add(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        connected_clients.discard(websocket)
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -63,6 +90,7 @@ async def create_event(event: Event):
         event_id = await db.create_event(doc)
         doc["event_id"] = event_id
         await handler.enqueue(doc)
+        await broadcast_event(doc)
         return EventResponse(success=True, event_id=event_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

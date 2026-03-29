@@ -1,15 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-
-type EventType = 'violation' | 'corrected'
-
-interface LogEvent {
-  id: string; type: EventType; title: string; description: string; time: string
-}
-interface Snapshot {
-  id: string; type: EventType; label: string; time: string
-}
+import { fetchEvents } from '@/lib/api'
+import { backendToFrontend, backendToSnapshot, type LogEvent, type Snapshot } from '@/lib/transforms'
 
 const INITIAL_EVENTS: LogEvent[] = [
   { id: '1', type: 'corrected', title: 'Intervention Successful',    description: 'Patient corrected — put down blue pill, picked up red pill.', time: '12:38 PM' },
@@ -33,13 +26,38 @@ export default function ActivityPage() {
   const [events,    setEvents]    = useState<LogEvent[]>(INITIAL_EVENTS)
   const [snapshots, setSnapshots] = useState<Snapshot[]>(INITIAL_SNAPSHOTS)
   const [clock,     setClock]     = useState('')
+  const [offline,   setOffline]   = useState(false)
   const logRef                    = useRef<HTMLDivElement>(null)
 
+  // Clock
   useEffect(() => {
     const tick = () => setClock(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
     tick()
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
+  }, [])
+
+  // Poll backend for real events
+  useEffect(() => {
+    let active = true
+
+    async function poll() {
+      const raw = await fetchEvents(50)
+      if (!active) return
+      if (raw.length > 0) {
+        setEvents(raw.map(backendToFrontend))
+        setSnapshots(raw.slice(0, 10).map(backendToSnapshot))
+        setOffline(false)
+      } else {
+        // empty response could be no events yet or backend down
+        // keep existing state (fallback data stays visible)
+        setOffline(true)
+      }
+    }
+
+    poll()
+    const id = setInterval(poll, 3000)
+    return () => { active = false; clearInterval(id) }
   }, [])
 
   function simulateAlert() {
@@ -58,6 +76,11 @@ export default function ActivityPage() {
           Activity — Room 1
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--cs-muted)' }}>Margaret · Medication monitoring active</p>
+        {offline && (
+          <p className="text-xs mt-2 px-3 py-1 rounded-lg inline-block" style={{ background: '#FEF3CD', color: '#856404' }}>
+            Backend unreachable — showing cached data
+          </p>
+        )}
       </header>
 
       {/* Two-column layout */}
@@ -88,7 +111,7 @@ export default function ActivityPage() {
             {/* Log header */}
             <div className="flex items-center justify-between px-5 pt-4 pb-2">
               <span className="text-base font-bold" style={{ color: 'var(--cs-primary-dk)' }}>Event Log</span>
-              <button onClick={simulateAlert} className="cs-btn-outline">+ Simulate Alert</button>
+              <button onClick={simulateAlert} className="cs-btn-outline">+ Demo Alert</button>
             </div>
 
             {/* Event log */}

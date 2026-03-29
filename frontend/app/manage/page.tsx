@@ -1,20 +1,58 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { fetchMedication, saveMedication } from '@/lib/api'
 
 const PILL_COLORS = ['#e05c5c','#e05c5c','#4CAF8A','#e05c5c','#5B8FBF','#e05c5c','#F0A030','#e05c5c']
+const KNOWN_COLORS = ['red', 'blue', 'green', 'yellow', 'orange', 'white', 'purple', 'pink']
 const DEFAULT_RULE = 'Patient should only take red pills.'
+
+function extractColor(text: string): string | null {
+  const lower = text.toLowerCase()
+  for (const color of KNOWN_COLORS) {
+    if (lower.includes(color)) return color
+  }
+  return null
+}
 
 export default function ManagePage() {
   const [ruleInput,     setRuleInput]     = useState(DEFAULT_RULE)
-  const [activeRule,    setActiveRule]    = useState(DEFAULT_RULE)
+  const [activeRule,    setActiveRule]     = useState(DEFAULT_RULE)
   const [lastTriggered, setLastTriggered] = useState('4 minutes ago')
+  const [saving,        setSaving]        = useState(false)
+  const [saveStatus,    setSaveStatus]    = useState<'idle' | 'saved' | 'failed'>('idle')
 
-  function saveRule() {
+  // Load current medication setting from backend on mount
+  useEffect(() => {
+    async function load() {
+      const med = await fetchMedication()
+      if (med?.expected_color) {
+        const rule = `Patient should only take ${med.expected_color} pills.`
+        setRuleInput(rule)
+        setActiveRule(rule)
+      }
+    }
+    load()
+  }, [])
+
+  async function saveRule() {
     const trimmed = ruleInput.trim()
     if (!trimmed) return
+
+    // Update local state immediately (responsive UI)
     setActiveRule(trimmed)
     setLastTriggered('just now')
+
+    // Extract color and save to backend
+    const color = extractColor(trimmed)
+    if (color) {
+      setSaving(true)
+      setSaveStatus('idle')
+      const ok = await saveMedication(color)
+      setSaving(false)
+      setSaveStatus(ok ? 'saved' : 'failed')
+      setTimeout(() => setSaveStatus('idle'), 3000)
+    }
   }
 
   return (
@@ -88,9 +126,17 @@ export default function ManagePage() {
           onBlur={e  => (e.target.style.borderColor = 'var(--cs-border)')}
         />
 
-        <button onClick={saveRule} className="cs-btn-primary block mb-7" style={{ fontSize: 14, padding: '10px 28px' }}>
-          Save Rule
-        </button>
+        <div className="flex items-center gap-3 mb-7">
+          <button onClick={saveRule} disabled={saving} className="cs-btn-primary block" style={{ fontSize: 14, padding: '10px 28px', opacity: saving ? 0.6 : 1 }}>
+            {saving ? 'Saving...' : 'Save Rule'}
+          </button>
+          {saveStatus === 'saved' && (
+            <span className="text-xs font-semibold" style={{ color: 'var(--cs-success)' }}>✓ Saved to backend</span>
+          )}
+          {saveStatus === 'failed' && (
+            <span className="text-xs font-semibold" style={{ color: 'var(--cs-alert)' }}>⚠ Could not reach backend</span>
+          )}
+        </div>
 
         {/* Active rule card */}
         <div className="p-5" style={{ background: 'var(--cs-surface)', border: '1px solid var(--cs-border)', borderRadius: 16, boxShadow: 'var(--cs-shadow)' }}>
