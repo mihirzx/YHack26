@@ -6,8 +6,6 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
-
 VIAM_API_KEY = os.getenv("VIAM_API_KEY")
 VIAM_API_KEY_ID = os.getenv("VIAM_API_KEY_ID")
 VIAM_ADDRESS = os.getenv("VIAM_ADDRESS", "caresight-main.r756pbub7x.viam.cloud")
@@ -48,7 +46,7 @@ async def connect():
 
         api_key=VIAM_API_KEY,
 
-        api_key_id=VIAM_API_KEY_ID
+        api_key_id=VIAM_API_KEY_ID:
     )
     return await RobotClient.at_address(VIAM_ADDRESS, opts)
 
