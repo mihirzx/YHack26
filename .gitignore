@@ -21,6 +21,9 @@ node_modules/
 # OS
 .DS_Store
 
+# Runtime output
+camera_output.json
+
 # Logs
 *.log
 
