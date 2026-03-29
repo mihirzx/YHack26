@@ -41,10 +41,14 @@ def _post_fall():
         "type": "fall_detected",
         "severity": "critical",
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "expected": "",
+        "observed": "",
+        "corrected": False,
     }
     print(f"[imu_listener] posting event: {event}")
     try:
-        resp = httpx.post(f"{BACKEND_URL}/events", json=event, timeout=5)
+        url = f"{BACKEND_URL.rstrip('/')}/events"
+        resp = httpx.post(url, json=event, timeout=5)
         print(f"[imu_listener] fall_detected posted → {resp.status_code}")
     except Exception as e:
         print(f"[imu_listener] failed to post event: {e}")

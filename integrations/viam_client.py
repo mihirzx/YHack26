@@ -72,6 +72,7 @@ async def run():
                 color = color_name.split("-")[-1]  # "red", "green", "yellow"
                 try:
                     detections = await detector.get_detections_from_camera(CAMERA_NAME)
+                    print(f"[viam_client] {color_name} detections: {detections}")
                     for det in detections:
                         conf = getattr(det, "confidence", 0.0)
                         if conf > best_confidence:
@@ -90,6 +91,9 @@ async def run():
 
             event = engine.process(vision_data)
             if event:
+                print(f"[viam_client] event generated: {event}")
+                if event.get("type") == "fall_detected":
+                    print("[viam_client] FALL DETECTED! Posting event.")
                 event["timestamp"] = datetime.now(timezone.utc).isoformat()
                 _post_event(event)
 

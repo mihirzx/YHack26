@@ -91,12 +91,12 @@ def _transcribe(audio_bytes: bytes) -> str:
 
 
 def _extract_item(text: str) -> Optional[str]:
-    """Extract item name from a 'where are my X' query."""
+    """Extract item name from a 'where are my X' query and lowercase it."""
     words = text.split()
     for i, word in enumerate(words):
         if word in ("my", "the", "our") and i + 1 < len(words):
-            # Return the next word(s) as the item
-            item = words[i + 1].rstrip("?.,!")
+            # Return the next word(s) as the item, lowercased
+            item = words[i + 1].rstrip("?.,!").lower()
             return item
     return None
 
@@ -106,12 +106,9 @@ def _is_item_query(text: str) -> bool:
 
 
 async def _answer_query(item: str):
-    if is_speaking():
-        print("[mic_listener] Suppressing speech: another system is speaking.")
-        return
-    set_speaking(True)
+    url = f"{BACKEND_URL.rstrip('/')}/items/{item}/last-seen"
     try:
-        resp = httpx.get(f"{BACKEND_URL}/items/{item}/last-seen", timeout=5)
+        resp = httpx.get(url, timeout=5)
         if resp.status_code == 200:
             data = resp.json()
             location = data.get("location", "an unknown location")

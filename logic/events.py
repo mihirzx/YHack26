@@ -9,6 +9,7 @@ Event types: wrong_med_attempt, corrected, escalated
 
 import time
 import logging
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -53,8 +54,8 @@ def create_event(
         severity = "medium"
 
     return {
-        "event_id": _next_event_id(),
-        "timestamp": time.time(),
+        # 'event_id' omitted; backend will assign
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "type": event_type,
         "expected": expected_color,
         "observed": observed_color,

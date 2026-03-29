@@ -44,8 +44,6 @@ export default function CameraCard({ roomName, patientName, status, lastViewed, 
         className="h-[180px] relative flex items-center justify-center"
         style={{ background: CAM_BG[status] }}
       >
-        <span className="text-4xl opacity-30" aria-hidden="true">📷</span>
-
         {/* Badge */}
         <div
           className="absolute top-[10px] right-[10px] flex items-center gap-[5px] px-[10px] py-1 rounded-full text-[11px] font-bold"

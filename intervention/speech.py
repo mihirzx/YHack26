@@ -1,6 +1,8 @@
 import os
 import pyaudio
 import threading
+import asyncio
+from collections import deque
 from elevenlabs.client import ElevenLabs
 from dotenv import load_dotenv
 
@@ -25,10 +27,31 @@ def _play_audio_bytes(audio_bytes: bytes):
     p.terminate()
 
 
+_speech_queue = deque()
+_speech_lock = asyncio.Lock()
+
+
+async def _speech_worker():
+    while True:
+        if _speech_queue:
+            text = _speech_queue.popleft()
+            audio_bytes = await generate_audio_file(text)
+            _play_audio_bytes(audio_bytes)
+            await asyncio.sleep(0.5)  # short cooldown between speeches
+        else:
+            await asyncio.sleep(0.1)
+
+
 async def speak(text: str):
-    """Generate speech and play it. Runs audio playback in a thread so it doesn't block asyncio."""
-    audio_bytes = await generate_audio_file(text)
-    threading.Thread(target=_play_audio_bytes, args=(audio_bytes,), daemon=True).start()
+    """Queue up speech to play one at a time."""
+    _speech_queue.append(text)
+
+
+# Start the speech worker in the background
+try:
+    threading.Thread(target=lambda: asyncio.run(_speech_worker()), daemon=True).start()
+except Exception:
+    pass
 
 
 def is_speaking() -> bool:
