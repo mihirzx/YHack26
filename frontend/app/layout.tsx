@@ -5,22 +5,18 @@ import Navbar from '@/components/Navbar'
 export const metadata: Metadata = {
   title: 'CareSight — Care, Always Within Reach',
   description: 'Real-time AI monitoring that alerts caregivers the moment a patient needs attention.',
-  viewport: 'width=device-width, initial-scale=1',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen">
+      <body 
+        className="bg-cs-bg min-h-screen"
+        suppressHydrationWarning={true}
+      >
         <Navbar />
-        <main>
-          {children}
-        </main>
+        <main>{children}</main>
       </body>
     </html>
   )
-};
+}

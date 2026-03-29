@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import styles from './Navbar.module.css'
 
 const NAV_LINKS = [
   { href: '/',          label: 'Home' },
@@ -23,9 +22,20 @@ export default function Navbar() {
   }, [])
 
   return (
-    <nav className={`${styles.nav} ${scrolled ? styles.navScrolled : ''}`} aria-label="Main navigation">
-      <Link href="/" className={styles.logo} aria-label="CareSight home">
-        <svg className={`${styles.heartSvg} heartbeat`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <nav
+      aria-label="Main navigation"
+      className={`flex items-center justify-between px-8 h-[58px] sticky top-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white/92 backdrop-blur-lg shadow-[0_2px_12px_rgba(91,191,190,0.08)] border-b border-[#D0E8E7]' 
+          : 'bg-white/75'
+      }`}
+    >
+      <Link
+        href="/"
+        aria-label="CareSight home"
+        className="font-display flex items-center gap-2 text-xl no-underline text-[#2E6B6A] hover:scale-105 transition-transform"
+      >
+        <svg className="w-5 h-5 heartbeat" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path
             d="M12 21C12 21 3 14.5 3 8.5C3 5.42 5.42 3 8.5 3C10.24 3 11.82 3.82 12 5C12.18 3.82 13.76 3 15.5 3C18.58 3 21 5.42 21 8.5C21 14.5 12 21 12 21Z"
             fill="#5BBFBE"
@@ -34,16 +44,16 @@ export default function Navbar() {
         CareSight
       </Link>
 
-      <div className={styles.links} role="list">
+      <div className="flex gap-2" role="list">
         {NAV_LINKS.map(({ href, label }) => {
-          const isActive = pathname === href
+          const active = pathname === href
           return (
             <Link
               key={href}
               href={href}
               role="listitem"
-              className={`${styles.link} ${isActive ? styles.linkActive : ''}`}
-              aria-current={isActive ? 'page' : undefined}
+              className={`cs-nav-link ${active ? 'active' : ''}`}
+              aria-current={active ? 'page' : undefined}
             >
               {label}
             </Link>
