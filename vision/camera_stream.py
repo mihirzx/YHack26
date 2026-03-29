@@ -4,11 +4,17 @@ import time
 from datetime import datetime
 
 from dotenv import load_dotenv
+from pathlib import Path
 import os
 
 VIAM_API_KEY = os.getenv("VIAM_API_KEY")
 VIAM_API_KEY_ID = os.getenv("VIAM_API_KEY_ID")
 VIAM_ADDRESS = os.getenv("VIAM_ADDRESS", "caresight-main.r756pbub7x.viam.cloud")
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
+print("VIAM_API_KEY loaded:", bool(VIAM_API_KEY))
+print("VIAM_API_KEY_ID loaded:", repr(VIAM_API_KEY_ID))
 
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "..", "camera_output.json")
 
@@ -55,7 +61,7 @@ async def main():
         green_vision_service = VisionClient.from_robot(machine, "color-detection-model-green")
         yellow_vision_service = VisionClient.from_robot(machine, "color-detection-model-yellow")
         while True:
-            time.sleep(1)
+            await asyncio.sleep(1)
 
             best_color = None
             best_confidence = 0.0
