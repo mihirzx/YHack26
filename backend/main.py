@@ -124,6 +124,14 @@ async def mark_corrected(event_id: str):
     return {"success": True}
 
 
+@app.get("/stats")
+async def get_stats():
+    try:
+        return await db.get_stats()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/settings/medication", response_model=MedicationSetting)
 async def get_medication():
     try:

@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: '/',          label: 'Home' },
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/activity',  label: 'Activity' },
+  { href: '/analytics', label: 'Analytics' },
   { href: '/manage',    label: 'Manage' },
 ]
 

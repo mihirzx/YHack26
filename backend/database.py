@@ -97,3 +97,54 @@ async def set_config(expected_color: str):
         {"$set": {"expected_color": expected_color}},
         upsert=True,
     )
+
+
+async def get_stats() -> dict:
+    """Aggregate event stats for the analytics dashboard."""
+    all_events = await events_col.find({}, {"_id": 0}).sort("timestamp", -1).to_list(500)
+
+    total = len(all_events)
+    violations = [e for e in all_events if e.get("type") in ("wrong_med_attempt", "escalated")]
+    corrections = [e for e in all_events if e.get("type") in ("corrected", "correct_med_taken")]
+    escalations = [e for e in all_events if e.get("type") == "escalated"]
+
+    correction_rate = (len(corrections) / len(violations) * 100) if violations else 100.0
+
+    # Events grouped by type
+    type_counts: dict[str, int] = {}
+    for e in all_events:
+        t = e.get("type", "unknown")
+        type_counts[t] = type_counts.get(t, 0) + 1
+
+    # Severity breakdown
+    severity_counts: dict[str, int] = {}
+    for e in all_events:
+        s = e.get("severity", "unknown")
+        severity_counts[s] = severity_counts.get(s, 0) + 1
+
+    # Last 24h hourly breakdown
+    now = datetime.now(timezone.utc)
+    hourly: dict[int, int] = {h: 0 for h in range(24)}
+    for e in all_events:
+        try:
+            ts = e.get("timestamp", "")
+            if isinstance(ts, (int, float)):
+                t = datetime.fromtimestamp(ts, tz=timezone.utc)
+            else:
+                t = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+            if (now - t).total_seconds() < 86400:
+                hourly[t.hour] = hourly.get(t.hour, 0) + 1
+        except Exception:
+            pass
+
+    return {
+        "total_events": total,
+        "total_violations": len(violations),
+        "total_corrections": len(corrections),
+        "total_escalations": len(escalations),
+        "correction_rate": round(correction_rate, 1),
+        "type_counts": type_counts,
+        "severity_counts": severity_counts,
+        "hourly_activity": hourly,
+        "recent_events": all_events[:10],
+    }
