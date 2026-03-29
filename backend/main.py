@@ -52,6 +52,11 @@ class Event(BaseModel):
     corrected: bool = False
     severity: str = "medium"
 
+class ItemLog(BaseModel):
+    item: str
+    location: str
+    area: Optional[str] = ""
+
 class MedicationSetting(BaseModel):
     expected_color: str
 
@@ -135,6 +140,31 @@ async def set_medication(setting: MedicationSetting):
         return MedicationResponse(success=True, expected_color=setting.expected_color)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/items", status_code=201)
+async def log_item(item: ItemLog):
+    try:
+        item_id = await db.log_item(item.item, item.location, item.area)
+        return {"success": True, "item_id": item_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/items")
+async def list_items():
+    try:
+        return await db.list_items()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/items/{item}/last-seen")
+async def get_item_last_seen(item: str):
+    doc = await db.get_item_last_seen(item)
+    if not doc:
+        raise HTTPException(status_code=404, detail=f"No sighting recorded for '{item}'")
+    return doc
 
 
 if __name__ == "__main__":

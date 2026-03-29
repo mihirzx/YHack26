@@ -16,8 +16,10 @@ websockets                     # ElevenLabs WebSocket streaming
 # Alerts
 twilio
 
-# Audio playback (Pi speaker)
+# Audio playback + STT
 pyaudio
+openai-whisper
+soundfile
 
 # Hardware
 viam-sdk[mlmodel]
