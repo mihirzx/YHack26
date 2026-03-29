@@ -27,16 +27,20 @@ async def connect():
 async def main():
     async with await connect() as machine:
 
-        green_vision_service = VisionClient.from_robot(machine, "color-detection-model")
-        blue_vision_service = VisionClient.from_robot(machine, "color-detection-model-blue")
+        red_vision_service = VisionClient.from_robot(machine, "color-detection-model-red")
+        green_vision_service = VisionClient.from_robot(machine, "color-detection-model-green")
+        yellow_vision_service = VisionClient.from_robot(machine, "color-detection-model-yellow")
         while True:
             time.sleep(1)
             green_classification = await green_vision_service.get_detections_from_camera(camera_name='camera')
             if len(green_classification) > 0:
                 print(f"green_vision_service classify return value: {green_classification}")
-            blue_classification = await blue_vision_service.get_detections_from_camera(camera_name='camera')
-            if len(blue_classification) > 0:
-                print(f"blue_vision_service classify return value: {blue_classification}")
+            red_classification = await red_vision_service.get_detections_from_camera(camera_name='camera')
+            if len(red_classification) > 0:
+                print(f"red_vision_service classify return value: {red_classification}")
+            yellow_classification = await yellow_vision_service.get_detections_from_camera(camera_name='camera')
+            if len(yellow_classification) > 0:
+                print(f"yellow_vision_service classify return value: {yellow_classification}")
 
 if __name__ == '__main__':
     asyncio.run(main())
