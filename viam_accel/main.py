@@ -8,6 +8,9 @@ from arduino_accel import ArduinoAccelerometer
 
 
 async def main():
+    print("LOADING UPDATED MAIN.PY")
+    print("REGISTERING MODEL:", ArduinoAccelerometer.MODEL)
+
     Registry.register_resource_creator(
         MovementSensor.API,
         ArduinoAccelerometer.MODEL,
