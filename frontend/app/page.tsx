@@ -34,7 +34,7 @@ export default function LandingPage() {
             color: '#2E6B6A',
           }}
         >
-          Care, Always<br />Within Reach
+          Buddy, Always<br />Within Reach
         </h1>
         <p className="text-lg mb-9 max-w-[480px] mx-auto" style={{ color: '#7A9E9E' }}>
           Real-time AI monitoring that alerts caregivers the moment a patient needs attention.
