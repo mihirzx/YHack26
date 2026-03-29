@@ -1,0 +1,128 @@
+.wrapper {
+  padding: 32px;
+  min-height: calc(100vh - 58px);
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+/* Hero */
+.hero {
+  border-radius: var(--radius-xl);
+  background: radial-gradient(ellipse at 50% 30%, #A8DEDD 0%, #C8EDE9 35%, #EEF8F7 70%);
+  padding: 80px 40px 64px;
+  text-align: center;
+  animation: fade-up 400ms ease-out both;
+}
+
+.heroHeadline {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 6vw, 64px);
+  color: var(--color-primary-dark);
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+
+.heroSub {
+  font-size: 18px;
+  color: var(--color-text-muted);
+  max-width: 480px;
+  margin: 0 auto 36px;
+}
+
+.ctaBtn {
+  display: inline-block;
+  background: var(--color-primary);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px 40px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+  box-shadow: 0 4px 20px rgba(91, 191, 190, 0.35);
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ctaBtn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(91, 191, 190, 0.4), 0 6px 28px rgba(91, 191, 190, 0.5);
+  }
+}
+
+.ctaBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Features */
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .features {
+    grid-template-columns: 1fr;
+  }
+}
+
+.featCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 28px 20px;
+  text-align: center;
+  animation: fade-up 400ms ease-out both;
+}
+
+.featIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  font-size: 22px;
+}
+
+.featTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: 8px;
+}
+
+.featDesc {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* Footer */
+.footer {
+  margin-top: auto;
+  padding: 24px 0 8px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.footerLogo {
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--color-primary-dark);
+}
+
+.footerCopy {
+  font-size: 12px;
+}

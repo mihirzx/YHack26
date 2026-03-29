@@ -1,114 +1,41 @@
-'use client';
+import styles from './page.module.css'
 
-import { useState, useEffect } from 'react';
-
-interface Event {
-  event_id: string;
-  timestamp: string;
-  type: string;
-  expected: string;
-  observed: string;
-  corrected: boolean;
-  severity: string;
-}
-
-interface MedicationSetting {
-  expected_color: string;
-}
-
-export default function CareSightDashboard() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [settings, setSettings] = useState<MedicationSetting>({ expected_color: 'red' });
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
-
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-  useEffect(() => {
-    loadEvents();
-    loadSettings();
-    const interval = setInterval(() => {
-      loadEvents();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadEvents = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/events`);
-      const data = await response.json();
-      setEvents(data);
-    } catch (error) {
-      console.error('Failed to load events:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadSettings = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/settings/medication`);
-      const data = await response.json();
-      setSettings(data);
-    } catch (error) {
-      console.error('Failed to load settings:', error);
-    }
-  };
-
-  const saveSettings = async () => {
-    try {
-      await fetch(`${API_BASE_URL}/settings/medication`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(settings),
-      });
-      setMessage('Settings saved successfully!');
-      setTimeout(() => setMessage(''), 3000);
-    } catch (error) {
-      setMessage('Failed to save settings');
-      setTimeout(() => setMessage(''), 3000);
-    }
-  };
-
-  const totalEvents = events.length;
-  const violations = events.filter(e => e.type === 'wrong_med_attempt' && !e.corrected).length;
-  const corrections = events.filter(e => e.corrected).length;
-
-  const getColorClass = (color: string) => {
-    const colorMap: { [key: string]: string } = {
-      red: 'bg-red-500',
-      blue: 'bg-blue-500',
-      green: 'bg-green-500',
-      yellow: 'bg-yellow-500',
-      orange: 'bg-orange-500',
-      purple: 'bg-purple-500'
-    };
-    return colorMap[color] || 'bg-gray-500';
-  };
-
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-blue-600 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-              </svg>
-              <h1 className="text-2xl font-bold">CareSight Dashboard</h1>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm">Live Monitoring</span>
-              <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className={styles.wrapper}>
+      {/* Hero */}
+      <section className={styles.hero} aria-label="Hero section">
+        <h1 className={styles.heroHeadline}>
+          Care, Always Within Reach
+        </h1>
+        <p className={styles.heroSub}>
+          Real-time AI monitoring that alerts caregivers the moment a patient needs attention.
+        </p>
+        <a href="/dashboard" className={styles.ctaBtn}>
+          View Dashboard
+        </a>
+      </section>
 
+      {/* Features */}
+      <section className={styles.features} aria-label="Features">
+        <div className={styles.featCard}>
+          <div className={styles.featIcon}>👁️</div>
+          <h3 className={styles.featTitle}>Live Monitoring</h3>
+          <p className={styles.featDesc}>AI-powered camera feeds with real-time patient monitoring and instant alerts.</p>
+        </div>
+        <div className={styles.featCard}>
+          <div className={styles.featIcon}>⚡</div>
+          <h3 className={styles.featTitle}>Smart Alerts</h3>
+          <p className={styles.featDesc}>Intelligent detection of medication violations with immediate caregiver notifications.</p>
+        </div>
+        <div className={styles.featCard}>
+          <div className={styles.featIcon}>📊</div>
+          <h3 className={styles.featTitle}>Activity Timeline</h3>
+          <p className={styles.featDesc}>Complete event history with corrections and compliance tracking over time.</p>
+        </div>
+      </section>
+
+<<<<<<< Updated upstream
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Settings Section */}
         <section className="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -271,6 +198,13 @@ export default function CareSightDashboard() {
           </div>
         </section>
       </main>
+=======
+      {/* Footer */}
+      <footer className={styles.footer}>
+        <div className={styles.footerLogo}>CareSight</div>
+        <div className={styles.footerCopy}>© 2026 CareSight. All rights reserved.</div>
+      </footer>
+>>>>>>> Stashed changes
     </div>
-  );
+  )
 }
