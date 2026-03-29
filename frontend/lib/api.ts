@@ -66,12 +66,52 @@ export async function fetchEvents(limit = 50): Promise<BackendEvent[]> {
 }
 
 export async function fetchStats(): Promise<DashboardStats | null> {
+  // Try /stats first, fall back to computing from /events
   try {
     const response = await get(`${API_URL}/stats`)
-    if (!response.ok) throw new Error(response.statusText)
-    return await response.json()
+    if (response.ok) return await response.json()
+  } catch {}
+
+  // Fallback: derive stats from raw events
+  try {
+    const events = await fetchEvents(200)
+    if (events.length === 0) return null
+
+    const violations = events.filter(e => e.type === 'wrong_med_attempt' || e.type === 'escalated')
+    const corrections = events.filter(e => e.type === 'corrected' || e.type === 'correct_med_taken')
+    const escalations = events.filter(e => e.type === 'escalated')
+    const correctionRate = violations.length > 0 ? (corrections.length / violations.length) * 100 : 100
+
+    const typeCounts: Record<string, number> = {}
+    const severityCounts: Record<string, number> = {}
+    const hourlyActivity: Record<string, number> = {}
+    for (let h = 0; h < 24; h++) hourlyActivity[h] = 0
+
+    for (const e of events) {
+      typeCounts[e.type] = (typeCounts[e.type] || 0) + 1
+      severityCounts[e.severity] = (severityCounts[e.severity] || 0) + 1
+      try {
+        const d = new Date(e.timestamp)
+        if (!isNaN(d.getTime())) {
+          const h = d.getHours()
+          hourlyActivity[h] = (hourlyActivity[h] || 0) + 1
+        }
+      } catch {}
+    }
+
+    return {
+      total_events: events.length,
+      total_violations: violations.length,
+      total_corrections: corrections.length,
+      total_escalations: escalations.length,
+      correction_rate: Math.round(correctionRate * 10) / 10,
+      type_counts: typeCounts,
+      severity_counts: severityCounts,
+      hourly_activity: hourlyActivity,
+      recent_events: events.slice(0, 10),
+    }
   } catch (err) {
-    console.warn('[api] fetchStats failed:', err)
+    console.warn('[api] fetchStats fallback failed:', err)
     return null
   }
 }
