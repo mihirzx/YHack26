@@ -28,6 +28,21 @@ export interface DashboardStats {
   recent_events: BackendEvent[]
 }
 
+export interface PatientStats {
+  patientId: string
+  patientName: string
+  totalEvents: number
+  violations: number
+  corrections: number
+  correctionRate: number
+  lastEvent: string
+}
+
+export interface HexAnalysisResult {
+  summary: string
+  trends: string[]
+}
+
 // ── API functions ───────────────────────────────────────
 
 export async function fetchEvents(limit = 50): Promise<BackendEvent[]> {
@@ -60,6 +75,36 @@ export async function fetchMedication(): Promise<MedicationSetting | null> {
   } catch (err) {
     console.warn('[api] fetchMedication failed:', err)
     return null
+  }
+}
+
+export async function getPatientStats(): Promise<PatientStats[]> {
+  try {
+    const stats = await fetchStats()
+    if (!stats) return []
+    // Derive patient stats from aggregated event data
+    return [{
+      patientId: '1',
+      patientName: 'Margaret',
+      totalEvents: stats.total_events,
+      violations: stats.total_violations,
+      corrections: stats.total_corrections,
+      correctionRate: stats.correction_rate,
+      lastEvent: stats.recent_events[0]?.timestamp || 'N/A',
+    }]
+  } catch (err) {
+    console.warn('[api] getPatientStats failed:', err)
+    return []
+  }
+}
+
+export async function getActiveAlerts(): Promise<BackendEvent[]> {
+  try {
+    const events = await fetchEvents(20)
+    return events.filter(e => !e.corrected && e.severity !== 'low')
+  } catch (err) {
+    console.warn('[api] getActiveAlerts failed:', err)
+    return []
   }
 }
 
