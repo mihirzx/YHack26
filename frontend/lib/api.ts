@@ -1,5 +1,14 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
+const HEADERS: Record<string, string> = {
+  'ngrok-skip-browser-warning': 'true',
+  'Content-Type': 'application/json',
+}
+
+function get(url: string) {
+  return fetch(url, { headers: HEADERS })
+}
+
 // ── Types ───────────────────────────────────────────────
 
 export interface BackendEvent {
@@ -47,7 +56,7 @@ export interface HexAnalysisResult {
 
 export async function fetchEvents(limit = 50): Promise<BackendEvent[]> {
   try {
-    const response = await fetch(`${API_URL}/events?limit=${limit}`)
+    const response = await get(`${API_URL}/events?limit=${limit}`)
     if (!response.ok) throw new Error(response.statusText)
     return await response.json()
   } catch (err) {
@@ -58,7 +67,7 @@ export async function fetchEvents(limit = 50): Promise<BackendEvent[]> {
 
 export async function fetchStats(): Promise<DashboardStats | null> {
   try {
-    const response = await fetch(`${API_URL}/stats`)
+    const response = await get(`${API_URL}/stats`)
     if (!response.ok) throw new Error(response.statusText)
     return await response.json()
   } catch (err) {
@@ -69,7 +78,7 @@ export async function fetchStats(): Promise<DashboardStats | null> {
 
 export async function fetchMedication(): Promise<MedicationSetting | null> {
   try {
-    const response = await fetch(`${API_URL}/settings/medication`)
+    const response = await get(`${API_URL}/settings/medication`)
     if (!response.ok) throw new Error(response.statusText)
     return await response.json()
   } catch (err) {
@@ -112,7 +121,7 @@ export async function saveMedication(color: string): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/settings/medication`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: HEADERS,
       body: JSON.stringify({ expected_color: color }),
     })
     return response.ok
