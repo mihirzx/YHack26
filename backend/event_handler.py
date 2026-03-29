@@ -1,7 +1,10 @@
 import asyncio
+import os
 from collections import deque
 from intervention.llm import generate_instruction
 from intervention.speech import speak
+from integrations.twilio_sms import send_sms
+from integrations.elevenlabs_call import trigger_call
 import backend.database as db
 
 event_queue: asyncio.Queue = asyncio.Queue()
@@ -27,7 +30,17 @@ async def consumer():
             text = await generate_instruction(event, context)
             await speak(text)
             recent_events.append(event)
-            # TODO Step 8: if high severity → nanoclaw + twilio
+
+            severity = event.get("severity", "low")
+            patient_name = os.getenv("PATIENT_NAME", "the patient")
+            if severity in ("high", "critical"):
+                asyncio.create_task(send_sms(f"CareSight Alert: {text}"))
+            if severity == "critical":
+                asyncio.create_task(trigger_call(
+                    event_type=event.get("type", "alert"),
+                    event_description=text,
+                    patient_name=patient_name,
+                ))
         except Exception as e:
             print(f"[event_handler] error processing event: {e}")
         finally:
