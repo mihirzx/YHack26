@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import uuid
 import os
 from dotenv import load_dotenv
+from typing import Optional
 
 load_dotenv()
 
@@ -46,7 +47,7 @@ async def list_events(limit: int = 50) -> list:
     return await cursor.to_list(limit)
 
 
-async def get_event(event_id: str) -> dict | None:
+async def get_event(event_id: str) -> Optional[dict]:
     return await events_col.find_one({"event_id": event_id}, {"_id": 0})
 
 
@@ -77,7 +78,7 @@ async def log_item(item: str, location: str, area: str = "") -> str:
     return doc["item_id"]
 
 
-async def get_item_last_seen(item: str) -> dict | None:
+async def get_item_last_seen(item: str) -> Optional[dict]:
     return await items_col.find_one(
         {"item": item.lower().strip()},
         {"_id": 0},

@@ -65,12 +65,16 @@ class PatientState:
             logger.info("Patient corrected: now holding %s", self.observed_color)
 
     def is_mismatch(self) -> bool:
-        """Check if observed color doesn't match expected."""
-        if self.observed_color is None:
-            return False
-        if not self.hand_detected:
+        """Return True if the observed color does not match the expected color and both are set."""
+        if self.observed_color is None or self.expected_color is None:
             return False
         return self.observed_color != self.expected_color
+
+    def is_correct(self) -> bool:
+        """Return True if the observed color matches the expected color and both are set."""
+        if self.observed_color is None or self.expected_color is None:
+            return False
+        return self.observed_color == self.expected_color
 
     def can_alert(self) -> bool:
         """Check if enough time has passed since last alert (anti-spam)."""

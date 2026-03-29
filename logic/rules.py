@@ -13,6 +13,7 @@ Output: event dict (or None if no action needed)
 
 import time
 import logging
+from typing import Optional
 from logic.state import PatientState
 from logic.events import wrong_med_event, corrected_event, escalated_event
 
@@ -31,21 +32,29 @@ class RulesEngine:
 
     # Seconds to wait before escalating an uncorrected wrong attempt
     ESCALATION_TIMEOUT = 15.0
+    # Debounce: require N consecutive frames with valid detection before triggering
+    DEBOUNCE_FRAMES = 5
 
     def __init__(self, expected_color: str):
         self.state = PatientState(expected_color)
         self._wrong_attempt_time = None
         self._escalated = False
+        self._valid_detection_count = 0
 
-    def process(self, vision_data: dict) -> dict | None:
+    def process(self, vision_data: dict) -> Optional[dict]:
         """Process a single frame of vision data.
 
         Returns an event dict if action is needed, None otherwise.
         """
         self.state.update(vision_data)
 
-        # No person or no hand interaction — nothing to evaluate
-        if not self.state.person_detected or not self.state.hand_detected:
+        # Debounce logic: require N consecutive frames with valid detection
+        if self.state.person_detected and self.state.hand_detected:
+            self._valid_detection_count += 1
+        else:
+            self._valid_detection_count = 0
+
+        if self._valid_detection_count < self.DEBOUNCE_FRAMES:
             return None
 
         # Patient corrected their action
@@ -53,6 +62,7 @@ class RulesEngine:
             self.state.corrected = False
             self._wrong_attempt_time = None
             self._escalated = False
+            self._valid_detection_count = 0
             logger.info("Correction detected")
             return corrected_event(
                 self.state.expected_color,

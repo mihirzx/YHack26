@@ -2,7 +2,7 @@ import asyncio
 import os
 from collections import deque
 from intervention.llm import generate_instruction, _describe_event
-from intervention.speech import speak
+from intervention.speech import speak, is_speaking, set_speaking
 from integrations.elevenlabs_call import trigger_call
 import backend.database as db
 
@@ -35,9 +35,15 @@ async def consumer():
     while True:
         event = await event_queue.get()
         try:
+            if is_speaking():
+                print("[event_handler] Suppressing speech: another system is speaking.")
+                event_queue.task_done()
+                continue
+            set_speaking(True)
             context = _build_context()
             text = await generate_instruction(event, context)
             await speak(text)
+            set_speaking(False)
             recent_events.append(event)
 
             severity = event.get("severity", "low")

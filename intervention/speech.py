@@ -31,6 +31,14 @@ async def speak(text: str):
     threading.Thread(target=_play_audio_bytes, args=(audio_bytes,), daemon=True).start()
 
 
+def is_speaking() -> bool:
+    return False
+
+
+def set_speaking(val: bool):
+    pass
+
+
 async def generate_audio_file(text: str) -> bytes:
     """Generate audio bytes from text using ElevenLabs."""
     audio = client.text_to_speech.convert(

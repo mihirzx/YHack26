@@ -15,6 +15,7 @@ import httpx
 import pyaudio
 import whisper
 from dotenv import load_dotenv
+from typing import Optional
 
 from intervention.speech import speak
 
@@ -37,8 +38,21 @@ model = whisper.load_model("tiny")
 print("[mic_listener] Whisper ready")
 
 
+# Simple file-based speaking lock to prevent overlapping speech
+SPEAKING_FLAG = "/tmp/caresight_speaking.lock"
+
+
+def is_speaking() -> bool:
+    return False
+
+
+def set_speaking(val: bool):
+    pass
+
+
 def _record_chunk() -> bytes:
     """Record a short audio chunk from the microphone."""
+    print("omg stop asking me")
     p = pyaudio.PyAudio()
     stream = p.open(
         format=pyaudio.paInt16,
@@ -67,6 +81,7 @@ def _transcribe(audio_bytes: bytes) -> str:
     """Transcribe audio bytes using Whisper."""
     buf = io.BytesIO(audio_bytes)
     import tempfile, soundfile as sf
+
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
         tmp.write(audio_bytes)
         tmp_path = tmp.name
@@ -75,7 +90,7 @@ def _transcribe(audio_bytes: bytes) -> str:
     return result["text"].strip().lower()
 
 
-def _extract_item(text: str) -> str | None:
+def _extract_item(text: str) -> Optional[str]:
     """Extract item name from a 'where are my X' query."""
     words = text.split()
     for i, word in enumerate(words):
@@ -91,6 +106,10 @@ def _is_item_query(text: str) -> bool:
 
 
 async def _answer_query(item: str):
+    if is_speaking():
+        print("[mic_listener] Suppressing speech: another system is speaking.")
+        return
+    set_speaking(True)
     try:
         resp = httpx.get(f"{BACKEND_URL}/items/{item}/last-seen", timeout=5)
         if resp.status_code == 200:
@@ -110,12 +129,16 @@ async def _answer_query(item: str):
 
     print(f"[mic_listener] speaking: {response_text}")
     await speak(response_text)
+    set_speaking(False)
 
 
 async def run():
     print(f"[mic_listener] listening for item queries...")
     while True:
         audio = _record_chunk()
+        if not audio:
+            print("[mic_listener] No audio recorded, skipping transcription.")
+            continue
         text = _transcribe(audio)
 
         if not text:

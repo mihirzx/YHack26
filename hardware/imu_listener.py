@@ -42,6 +42,7 @@ def _post_fall():
         "severity": "critical",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+    print(f"[imu_listener] posting event: {event}")
     try:
         resp = httpx.post(f"{BACKEND_URL}/events", json=event, timeout=5)
         print(f"[imu_listener] fall_detected posted → {resp.status_code}")

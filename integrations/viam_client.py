@@ -31,7 +31,8 @@ VISION_SERVICES = ["color-detection-model-red", "color-detection-model-green", "
 
 def _get_expected_color() -> str:
     try:
-        resp = httpx.get(f"{BACKEND_URL}/settings/medication", timeout=3)
+        url = f"{BACKEND_URL.rstrip('/')}/settings/medication"
+        resp = httpx.get(url, timeout=3)
         return resp.json().get("expected_color", "red")
     except Exception:
         return os.getenv("DEFAULT_EXPECTED_COLOR", "red")
@@ -39,7 +40,8 @@ def _get_expected_color() -> str:
 
 def _post_event(event: dict):
     try:
-        resp = httpx.post(f"{BACKEND_URL}/events", json=event, timeout=5)
+        url = f"{BACKEND_URL.rstrip('/')}/events"
+        resp = httpx.post(url, json=event, timeout=5)
         print(f"[viam_client] {event['type']} posted → {resp.status_code}")
     except Exception as e:
         print(f"[viam_client] failed to post: {e}")
