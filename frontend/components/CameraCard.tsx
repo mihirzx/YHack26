@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link'
 
 export type Status = 'live' | 'alert' | 'idle'
